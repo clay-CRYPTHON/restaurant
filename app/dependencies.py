@@ -5,6 +5,7 @@ from app.models import User
 from app.routers.auth import get_current_user  # get_current_user funksiyasi avvalgi muloqotlarda taqdim etilgan
 from app.database import SessionLocal
 
+
 def get_db():
     db = SessionLocal()
     try:

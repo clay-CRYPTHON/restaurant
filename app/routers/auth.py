@@ -123,7 +123,7 @@ def login(user_login: UserLogin, Authorize: AuthJWT = Depends(), db: Session = D
     if not check_password_hash(user.hashed_password, user_login.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    access_token = Authorize.create_access_token(subject=user.username)
+    access_token = Authorize.create_access_token(subject=user.username, user_claims={"role": user.role})
     refresh_token = Authorize.create_refresh_token(subject=user.username)
 
     token = {

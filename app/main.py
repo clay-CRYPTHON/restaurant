@@ -5,10 +5,12 @@ from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
 from app.routers.auth import auth_router
 from app.routers.orders import order_router
+from app.routers.menu import menu_router
 
 app = FastAPI()
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(order_router, prefix="/orders", tags=["Orders"])
+app.include_router(menu_router, prefix="/menu", tags=["Menu"])
 
 
 class Settings(BaseModel):

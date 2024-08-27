@@ -33,15 +33,19 @@ class UserResponse(BaseModel):
 
 class MenuBase(BaseModel):
     name: str
-    price: int
-    description: Optional[str] = None
+    price: float
+    description: Optional[str]
 
 
 class MenuCreate(MenuBase):
     pass
 
 
-class MenuResponse(MenuBase):
+class MenuUpdate(MenuBase):
+    pass
+
+
+class Menu(MenuBase):
     id: int
 
     class Config:
