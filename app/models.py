@@ -1,11 +1,10 @@
 from datetime import datetime
-
 from sqlalchemy.orm import relationship
-
-
 from sqlalchemy import Column, Integer, String, Enum, ForeignKey, DateTime, Boolean
 import enum
-from app.database import Base
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 
 class RoleEnum(str, enum.Enum):

@@ -3,14 +3,20 @@ from typing import List
 from fastapi import Depends, HTTPException, APIRouter, status
 from fastapi.encoders import jsonable_encoder
 import logging
+
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_jwt_auth import AuthJWT
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from app import models, schemas, database
 from app.database import SessionLocal
+from app.permission import is_nazoratchi
 from app.models import User
 from app.settings import Settings
-from app.schemas import UserLogin
+from app.schemas import UserLogin, UserResponse
 import datetime
 
 
@@ -49,17 +55,22 @@ def get_current_user(Authorize: AuthJWT = Depends(), db: Session = Depends(get_d
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
+def hash_password(password: str) -> str:
+    return generate_password_hash(password)
 
 
-def verify_password(plain_password: str, hashed_password: str):
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_password(stored_password: str, provided_password: str) -> bool:
+    if stored_password is None:
+        return False
+    return check_password_hash(stored_password, provided_password)
 
 
 # Function to get user by username or email
-def get_user_by_username_or_email(db: Session, identifier: str):
-    return db.query(User).filter((User.email == identifier) | (User.username == identifier)).first()
+def get_user_by_username_or_email(db: Session, username_or_email: str):
+    user = db.query(User).filter(
+        or_(User.username == username_or_email, User.email == username_or_email)
+    ).first()
+    return user
 
 
 def get_user_by_email(db: Session, email: str):
@@ -76,13 +87,14 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     new_user = models.User(
         username=user.username,
         email=user.email,
+        hashed_password=generate_password_hash(user.password),  # Bu yerda hashed_password ishlatamiz
         role=user.role
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)  # Bu qator yangi foydalanuvchidan ID va boshqa ma'lumotlarni oladi
 
-    return new_user  # Bu qatorni ma'lumotni qaytarish uchun yangilang
+    return new_user
 
 
 @auth_router.get('/', status_code=status.HTTP_200_OK, response_model=List[schemas.UserResponse])
@@ -97,14 +109,22 @@ async def get_users(db: Session = Depends(database.get_db), Authorize: AuthJWT =
     return users
 
 
-@auth_router.post("/login")
-def login(user: schemas.UserLogin, db: Session = Depends(database.get_db), Authorize: AuthJWT = Depends()):
-    db_user = get_user_by_username_or_email(db, user.username_or_email)
-    if not db_user or not verify_password(user.password, db_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect username/email or password")
+@auth_router.post('/login')
+def login(user_login: UserLogin, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    user = get_user_by_username_or_email(db, user_login.username_or_email)
 
-    access_token = Authorize.create_access_token(subject=db_user.email)
-    refresh_token = Authorize.create_refresh_token(subject=db_user.email)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    # To'g'ri o'qilganligiga ishonch hosil qiling
+    print(f"User object: {user}")
+
+    # Hashed parolni tekshiring
+    if not check_password_hash(user.hashed_password, user_login.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    access_token = Authorize.create_access_token(subject=user.username)
+    refresh_token = Authorize.create_refresh_token(subject=user.username)
 
     token = {
         'access_token': access_token,
@@ -112,13 +132,12 @@ def login(user: schemas.UserLogin, db: Session = Depends(database.get_db), Autho
     }
 
     response = {
-        'success': True,
+        'status': 'success',
         'code': 200,
-        'message': 'You are now logged in',
+        'message': 'Login successful',
         'token': token
     }
-
-    return jsonable_encoder(response)
+    return response
 
 
 @auth_router.post("/logout")
@@ -194,3 +213,16 @@ def update_user(user: schemas.UserBase, Authorize: AuthJWT = Depends(), db: Sess
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+@auth_router.delete("/users/{user_id}", response_model=dict)
+def delete_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(is_nazoratchi)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Foydalanuvchini o'chirish
+    db.delete(user)
+    db.commit()
+
+    return {"status": "success", "message": "User deleted successfully"}

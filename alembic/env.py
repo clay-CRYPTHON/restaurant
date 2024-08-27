@@ -43,7 +43,9 @@ else:
 
 
 def upgrade():
-    op.execute("CREATE TYPE role_enum_type AS ENUM ('nazoratchi', 'afissant', 'hodim', 'user')")
+    # 'users' jadvali va 'role' ustuni nomlarini moslashtiring
+    op.execute('ALTER TABLE users ALTER COLUMN role TYPE role_enum_type USING role::role_enum_type')
+
 
 
 def downgrade():
