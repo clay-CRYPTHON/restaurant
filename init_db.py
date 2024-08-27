@@ -1,5 +1,5 @@
 from app.database import Base, engine
-from app.models import User  # Modelni import qilish
+from app.models import User, Menu, Order, Reservation  # Barcha modellarni import qilish
 
-# Barcha modellardan jadvallarni yaratish
+# Jadvallarni yaratish
 Base.metadata.create_all(bind=engine)

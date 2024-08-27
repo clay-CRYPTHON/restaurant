@@ -1,4 +1,4 @@
-from app.models import Role
+from app.models import RoleEnum
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.models import User
@@ -22,7 +22,7 @@ def requires_role(required_role: str):
     return role_checker
 
 
-def requires_enum_role(required_role: Role):
+def requires_enum_role(required_role: RoleEnum):
     def role_checker(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
         # Enum orqali ruxsat berilgan ro'lni tekshirish
         if current_user.role != required_role.value:

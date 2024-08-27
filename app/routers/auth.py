@@ -2,6 +2,7 @@
 from typing import List
 from fastapi import Depends, HTTPException, APIRouter, status
 from fastapi.encoders import jsonable_encoder
+import logging
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
@@ -21,7 +22,6 @@ def get_config():
 auth_router = APIRouter()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 
 def get_db():
@@ -98,7 +98,7 @@ async def get_users(db: Session = Depends(database.get_db), Authorize: AuthJWT =
 
 
 @auth_router.post("/login")
-def login(user: UserLogin, db: Session = Depends(database.get_db), Authorize: AuthJWT = Depends()):
+def login(user: schemas.UserLogin, db: Session = Depends(database.get_db), Authorize: AuthJWT = Depends()):
     db_user = get_user_by_username_or_email(db, user.username_or_email)
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect username/email or password")

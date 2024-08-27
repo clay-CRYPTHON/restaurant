@@ -8,20 +8,23 @@ import enum
 from app.database import Base
 
 
-class Role(enum.Enum):
-    NAZORATCHI = "nazoratchi"
-    AFISSANT = "afissant"
-    USER = "user"
-    HODIM = "hodim"
+class RoleEnum(str, enum.Enum):
+    NAZORATCHI = "NAZORATCHI"
+    AFISSANT = "AFISSANT"
+    HODIM = "HODIM"
+    USER = "USER"
 
 
-class User():
+class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    role = Column(Enum(Role))
+    role = Column(Enum(RoleEnum), nullable=False)
+
+    orders = relationship('Order', back_populates='user')
+    reservations = relationship('Reservation', back_populates='user')
 
 
 class Order(Base):
@@ -56,4 +59,6 @@ class Menu(Base):
     name = Column(String)
     price = Column(Integer)
     description = Column(String)
+
+    orders = relationship('Order', back_populates='menu')
 
