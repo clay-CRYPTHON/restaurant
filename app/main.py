@@ -6,11 +6,16 @@ from pydantic import BaseModel
 from app.routers.auth import auth_router
 from app.routers.orders import order_router
 from app.routers.menu import menu_router
+from app.routers.table import table_router
+from app.routers.reservation import reservation_router
+
 
 app = FastAPI()
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(order_router, prefix="/orders", tags=["Orders"])
 app.include_router(menu_router, prefix="/menu", tags=["Menu"])
+app.include_router(table_router, prefix="/table", tags=["Table"])
+app.include_router(reservation_router, prefix="/reservation", tags=["Reservation"])
 
 
 class Settings(BaseModel):

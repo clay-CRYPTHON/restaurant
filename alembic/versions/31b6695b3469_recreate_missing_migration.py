@@ -1,8 +1,8 @@
-"""update models
+"""Recreate missing migration
 
-Revision ID: a68e25fa042a
-Revises: 053a57c90d72
-Create Date: 2024-08-26 21:58:56.243234
+Revision ID: 31b6695b3469
+Revises: 
+Create Date: 2024-08-30 13:40:36.265803
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'a68e25fa042a'
-down_revision: Union[str, None] = '053a57c90d72'
+revision: str = '31b6695b3469'
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

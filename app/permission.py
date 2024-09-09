@@ -14,12 +14,8 @@ def get_db():
         db.close()
 
 
-def get_current_user(db: Session, token: str) -> Optional[User]:
+def get_current_user(Authorize: AuthJWT = Depends()):
     pass
-    # Token orqali foydalanuvchini olish logikasi
-    # Misol uchun, tokenni dekodlash va foydalanuvchi ma'lumotlarini olish
-
-
 
 
 def is_nazoratchi(Authorize: AuthJWT = Depends()):

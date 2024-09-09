@@ -66,35 +66,39 @@ def verify_password(stored_password: str, provided_password: str) -> bool:
 
 
 # Function to get user by username or email
-def get_user_by_username_or_email(db: Session, username_or_email: str):
-    user = db.query(User).filter(
-        or_(User.username == username_or_email, User.email == username_or_email)
-    ).first()
-    return user
-
-
-def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
+def get_user_by_username(db: Session, username: str):
+    return db.query(User).filter(User.username == username).first()
 
 
 @auth_router.post("/register", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
-    db_user = get_user_by_email(db, user.email)
+    # Foydalanuvchini username orqali tekshirish
+    db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Username already registered")
 
     # Yangi foydalanuvchini yaratish va bazaga qo'shish
     new_user = models.User(
         username=user.username,
-        email=user.email,
-        hashed_password=generate_password_hash(user.password),  # Bu yerda hashed_password ishlatamiz
+        first_name=user.first_name,
+        last_name=user.last_name,
+        phone_number=user.phone_number,
+        hashed_password=generate_password_hash(user.password),
         role=user.role
     )
     db.add(new_user)
     db.commit()
-    db.refresh(new_user)  # Bu qator yangi foydalanuvchidan ID va boshqa ma'lumotlarni oladi
+    db.refresh(new_user)
 
-    return new_user
+    # Ma'lumotni UserResponse formatida qaytarish
+    return {
+        "id": new_user.id,
+        "username": new_user.username,
+        "first_name": new_user.first_name,
+        "last_name": new_user.last_name,
+        "phone_number": new_user.phone_number,
+        "role": new_user.role
+    }
 
 
 @auth_router.get('/', status_code=status.HTTP_200_OK, response_model=List[schemas.UserResponse])
@@ -111,7 +115,7 @@ async def get_users(db: Session = Depends(database.get_db), Authorize: AuthJWT =
 
 @auth_router.post('/login')
 def login(user_login: UserLogin, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
-    user = get_user_by_username_or_email(db, user_login.username_or_email)
+    user = get_user_by_username(db, user_login.username)
 
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -191,7 +195,7 @@ def get_user(Authorize: AuthJWT = Depends(), db: Session = Depends(database.get_
     Authorize.jwt_required()
 
     current_user_email = Authorize.get_jwt_subject()
-    db_user = get_user_by_email(db, current_user_email)
+    db_user = get_user_by_username(db, current_user_email)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
@@ -203,7 +207,7 @@ def update_user(user: schemas.UserBase, Authorize: AuthJWT = Depends(), db: Sess
     Authorize.jwt_required()
 
     current_user_email = Authorize.get_jwt_subject()
-    db_user = get_user_by_email(db, current_user_email)
+    db_user = get_user_by_username(db, current_user_email)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
 

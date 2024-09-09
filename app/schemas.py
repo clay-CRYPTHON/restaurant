@@ -1,30 +1,36 @@
+import pytz
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
+from enum import Enum
 
 
 class UserBase(BaseModel):
     username: str
-    email: EmailStr
+    phone_number: str
     role: str  # 'nazoratchi', 'afissant', 'user', 'hodim' bo'lishi mumkin
 
 
 class UserCreate(BaseModel):
     username: str
-    email: EmailStr
+    first_name: str
+    last_name: str
     password: str
+    phone_number: str
     role: str
 
 
 class UserLogin(BaseModel):
-    username_or_email: str
+    username: str
     password: str
 
 
 class UserResponse(BaseModel):
     id: int
     username: str
-    email: str
+    first_name: str
+    last_name: str
+    phone_number: str
     role: str
 
     class Config:
@@ -72,20 +78,66 @@ class OrderResponse(OrderBase):
         orm_mode = True
 
 
-class ReservationBase(BaseModel):
+class ReservationCreate(BaseModel):
     user_id: int
+    table_id: int  # table_number o'rniga table_id
+    start_time: datetime
+    end_time: datetime
+    is_active: bool = True
+
+    class Config:
+        orm_mode = True
+
+    def local_create_time(self):
+        timezone = pytz.timezone('Asia/Tashkent')
+        return self.create.astimezone(timezone)
+
+
+
+class ReservationUpdate(BaseModel):
     table_number: int
     start_time: datetime
     end_time: datetime
-    is_active: Optional[bool] = True
+    is_active: bool
 
 
-class ReservationCreate(ReservationBase):
+class ReservationResponse(BaseModel):
+    id: int
+    user_id: int
+    table_id: int
+    start_time: datetime
+    end_time: datetime
+    is_active: bool
+
+    class Config:
+        orm_mode = True
+
+
+
+class TableStatus(str, Enum):
+    AVAILABLE = "AVAILABLE"
+    RESERVED = "RESERVED"
+
+class TableBase(BaseModel):
+    table_number: int
+    capacity: int
+    status: TableStatus = TableStatus.AVAILABLE
+
+class TableCreate(TableBase):
     pass
 
+class TableUpdate(BaseModel):
+    capacity: Optional[int] = None
+    status: Optional[TableStatus] = None
 
-class ReservationResponse(ReservationBase):
+
+class TableInDB(TableBase):
     id: int
 
     class Config:
         orm_mode = True
+
+
+
+932470980
+936275060

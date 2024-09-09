@@ -1,52 +1,47 @@
-from sqlalchemy import engine_from_config, pool
+from __future__ import with_statement
+import logging
+from logging.config import fileConfig
+
 from alembic import context
-from app import models
-from alembic import op
-import sqlalchemy as sa
+from sqlalchemy import engine_from_config, pool
+from sqlalchemy.ext.declarative import declarative_base
+from app.models import Base  # o'zingizning model bazangiz
 
+# this is the Alembic Config object, which provides
+# access to the configuration options and settings.
 config = context.config
-config.set_main_option('sqlalchemy.url', 'postgresql+psycopg2://postgres:abbossetdarov@localhost/restaurants_db')
 
-target_metadata = models.Base.metadata
+# Interpret the config file for Python logging.
+# This line sets up loggers basically.
+fileConfig(config.config_file_name)
 
+# Add your model's MetaData object here
+# for 'autogenerate' support
+target_metadata = Base.metadata
 
 def run_migrations_offline():
-    context.configure(
-        url=config.get_main_option("sqlalchemy.url"),
-        target_metadata=target_metadata,
-        literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
-    )
+    """Run migrations in 'offline' mode."""
+    url = config.get_main_option("sqlalchemy.url")
+    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+
     with context.begin_transaction():
         context.run_migrations()
 
-
 def run_migrations_online():
+    """Run migrations in 'online' mode."""
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
+        prefix='sqlalchemy.',
+        poolclass=pool.NullPool
     )
+
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
+
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-
-
-def upgrade():
-    # 'users' jadvali va 'role' ustuni nomlarini moslashtiring
-    op.execute('ALTER TABLE users ALTER COLUMN role TYPE role_enum_type USING role::role_enum_type')
-
-
-
-def downgrade():
-    op.execute("DROP TYPE role_enum_type")
