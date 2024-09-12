@@ -1,5 +1,7 @@
 # Import necessary modules
 from typing import List
+
+import passlib
 from fastapi import Depends, HTTPException, APIRouter, status
 from fastapi.encoders import jsonable_encoder
 import logging
@@ -40,14 +42,10 @@ def get_db():
 
 def get_current_user(Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)) -> User:
     try:
-        # Tokenni tekshirish
         Authorize.jwt_required()
-
-        # Token orqali foydalanuvchi ID sini olish
         user_id = Authorize.get_jwt_subject()
+        user = db.query(User).filter(User.id == int(user_id)).first()
 
-        # Foydalanuvchi ma'lumotlarini bazadan olish
-        user = db.query(User).filter(User.id == user_id).first()
         if user is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
         return user
@@ -55,13 +53,12 @@ def get_current_user(Authorize: AuthJWT = Depends(), db: Session = Depends(get_d
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
+
+
 def hash_password(password: str) -> str:
     return generate_password_hash(password)
 
-
 def verify_password(stored_password: str, provided_password: str) -> bool:
-    if stored_password is None:
-        return False
     return check_password_hash(stored_password, provided_password)
 
 
@@ -120,15 +117,13 @@ def login(user_login: UserLogin, Authorize: AuthJWT = Depends(), db: Session = D
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # To'g'ri o'qilganligiga ishonch hosil qiling
-    print(f"User object: {user}")
-
-    # Hashed parolni tekshiring
-    if not check_password_hash(user.hashed_password, user_login.password):
+    # Parolni tekshirish
+    if not verify_password(user.hashed_password, user_login.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    access_token = Authorize.create_access_token(subject=user.username, user_claims={"role": user.role})
-    refresh_token = Authorize.create_refresh_token(subject=user.username)
+    # Foydalanuvchi ID sini subject sifatida yuboramiz
+    access_token = Authorize.create_access_token(subject=str(user.id), user_claims={"role": user.role})
+    refresh_token = Authorize.create_refresh_token(subject=str(user.id))
 
     token = {
         'access_token': access_token,
@@ -169,21 +164,19 @@ async def refresh_token(Authorize: AuthJWT = Depends()):
     try:
         access_lifetime = datetime.timedelta(minutes=60)
         Authorize.jwt_refresh_token_required()
-        current_user = Authorize.get_jwt_subject()
-        db_user = Session.query(User).filter(User.username == current_user).first()
+        current_user_id = Authorize.get_jwt_subject()
+
+        db_user = Session.query(User).filter(User.id == int(current_user_id)).first()
         if db_user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-        new_access_token = Authorize.create_access_token(subject=db_user.username, expires_time=access_lifetime)
-        response_model = {
+        new_access_token = Authorize.create_access_token(subject=str(db_user.id), expires_time=access_lifetime)
+        return {
             'success': True,
             'code': 200,
             'message': 'New access token is created',
-            'data': {
-                'access_token': new_access_token,
-            }
+            'data': {'access_token': new_access_token}
         }
-        return response_model
 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Refresh token")

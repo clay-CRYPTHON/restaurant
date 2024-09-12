@@ -58,24 +58,78 @@ class Menu(MenuBase):
         orm_mode = True
 
 
-class OrderBase(BaseModel):
-    user_id: int
+class OrderCreate(BaseModel):
+    table_id: int
     menu_id: int
     quantity: int
-    status: Optional[str] = "pending"  # Default status: 'pending'
+    delivery_time: Optional[datetime]
 
 
-class OrderCreate(OrderBase):
-    pass
+class OrderStatus(str, Enum):
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
-
-class OrderResponse(OrderBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
+class OrderUpdate(BaseModel):
+    status: OrderStatus
 
     class Config:
         orm_mode = True
+
+
+class OrderResponse(BaseModel):
+    id: int
+    table_id: int
+    menu_id: int
+    quantity: int
+    delivery_time: datetime
+    status: str
+
+    class Config:
+        orm_mode = True
+
+
+class Order(BaseModel):
+    id: int
+    user_id: int
+    table_id: int
+    menu_id: int
+    quantity: int
+    status: OrderStatus
+    created_at: datetime
+    updated_at: datetime
+    delivery_time: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+
+
+class OrderHistory(BaseModel):
+    orders: list[Order]
+
+    class Config:
+        orm_mode = True
+
+
+class MenuItem(BaseModel):
+    id: int
+    name: str
+    price: float
+
+    class Config:
+        orm_mode = True
+
+
+class Table(BaseModel):
+    id: int
+    number: int
+    status: str  # RESERVED yoki AVAILABLE
+
+    class Config:
+        orm_mode = True
+
+
 
 
 class ReservationCreate(BaseModel):

@@ -38,26 +38,31 @@ class User(Base):
 
 class Order(Base):
     __tablename__ = 'orders'
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     menu_id = Column(Integer, ForeignKey('menus.id'))
+    table_id = Column(Integer, ForeignKey('tables.id'))
     quantity = Column(Integer)
-    status = Column(String)  # 'pending', 'accepted', 'completed'
+    status = Column(String)
+    delivery_time = Column(DateTime, nullable=True)  # Ensure this line is present
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = relationship("User", back_populates="orders")
-    menu = relationship("Menu", back_populates="orders")
+    user = relationship('User', back_populates='orders')
+    menu = relationship('Menu', back_populates='orders')
+    table = relationship('Table', back_populates='orders')
 
 
 class Menu(Base):
-    __tablename__ = 'menus'
+    __tablename__ = "menu"
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
     price = Column(Integer)
     description = Column(String)
 
-    orders = relationship('Order', back_populates='menu')
+    orders = relationship("Order", back_populates="menu")  # `Order` modelida `menu` xususiyati bilan bog'langan
 
 
 class Reservation(Base):
@@ -93,3 +98,4 @@ class Table(Base):
     status = Column(SqlEnum(TableStatus), default=TableStatus.AVAILABLE)
 
     reservations = relationship("Reservation", back_populates="table")
+    orders = relationship("Order", back_populates="table")

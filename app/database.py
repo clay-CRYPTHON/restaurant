@@ -7,6 +7,7 @@ engine = create_engine('postgresql+psycopg2://postgres:abbossetdarov@localhost/r
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+connection = engine.connect()
 Base = declarative_base()
 
 
