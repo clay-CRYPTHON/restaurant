@@ -1,9 +1,0 @@
-# Exported from Render on 2024-09-12T11:57:11Z
-services:
-- type: web
-  name: restaurant
-  runtime: static
-  repo: https://github.com/clay-CRYPTHON/restaurant
-  buildCommand: uvicorn app.main:app --reload
-  staticPublishPath: ./docs
-version: "1"

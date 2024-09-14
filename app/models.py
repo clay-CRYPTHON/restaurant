@@ -41,7 +41,7 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    menu_id = Column(Integer, ForeignKey('menus.id'))
+    menu_id = Column(Integer, ForeignKey('menu.id'))
     table_id = Column(Integer, ForeignKey('tables.id'))
     quantity = Column(Integer)
     status = Column(String)

@@ -57,19 +57,22 @@ class Menu(MenuBase):
     class Config:
         orm_mode = True
 
-
-class OrderCreate(BaseModel):
-    table_id: int
-    menu_id: int
-    quantity: int
-    delivery_time: Optional[datetime]
-
-
 class OrderStatus(str, Enum):
     PENDING = "PENDING"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
+
+
+class OrderCreate(BaseModel):
+    menu_id: int
+    quantity: int
+    table_id: int
+    status: OrderStatus
+
+    class Config:
+        orm_mode = True
+
 
 class OrderUpdate(BaseModel):
     status: OrderStatus
@@ -83,7 +86,6 @@ class OrderResponse(BaseModel):
     table_id: int
     menu_id: int
     quantity: int
-    delivery_time: datetime
     status: str
 
     class Config:

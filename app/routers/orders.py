@@ -3,23 +3,41 @@ from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.orm import Session
 from app import models, schemas
 from app.database import get_db
+from app.models import Order, Menu, Table
 from app.routers.auth import get_current_user  # Bu sizning JWT autentifikatsiyangiz bo'lsa
 from app.permission import is_nazoratchi# Rollar bo'yicha tekshirish uchun
+from app.schemas import OrderCreate
 
 order_router = APIRouter()
 
-@order_router.post("/make", response_model=schemas.OrderResponse, status_code=status.HTTP_201_CREATED)
-def create_order(order: schemas.OrderCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user), Authorize: AuthJWT = Depends()):
-    # Yangi buyurtma yaratish
-    try:
-        Authorize.jwt_required()
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Enter valid access token")
 
-    new_order = models.Order(**order.dict(), user_id=current_user.id)
+@order_router.post("/make", response_model=OrderCreate)
+def make_order(order: OrderCreate, Authorize: AuthJWT = Depends(), db: Session = Depends(get_db)):
+    Authorize.jwt_required()
+
+    # Menu va stolni tekshirish
+    menu = db.query(Menu).filter(Menu.id == order.menu_id).first()  # To'g'ri tekshirish
+    table = db.query(Table).filter(Table.id == order.table_id).first()
+
+    if not menu:
+        raise HTTPException(status_code=404, detail="Menu not found")
+
+    if not table:
+        raise HTTPException(status_code=404, detail="Table not found")
+
+    # Yangi buyurtma yaratish
+    new_order = Order(
+        user_id=Authorize.get_jwt_subject(),  # JWT tokenidan user_id olish
+        menu_id=order.menu_id,
+        table_id=order.table_id,
+        quantity=order.quantity,
+        status=order.status,
+    )
+
     db.add(new_order)
     db.commit()
     db.refresh(new_order)
+
     return new_order
 
 @order_router.get("/{order_id}", response_model=schemas.OrderResponse)
