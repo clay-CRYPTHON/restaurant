@@ -51,8 +51,7 @@ class Order(Base):
 
     user = relationship('User', back_populates='orders')
     menu = relationship('Menu', back_populates='orders')
-    table = relationship('Table', back_populates='orders')
-
+    table = relationship("Table", back_populates="orders")
 
 class Menu(Base):
     __tablename__ = "menu"
@@ -62,7 +61,7 @@ class Menu(Base):
     price = Column(Integer)
     description = Column(String)
 
-    orders = relationship("Order", back_populates="menu")  # `Order` modelida `menu` xususiyati bilan bog'langan
+    orders = relationship("Order", back_populates="menu")  # Order modelida menu xususiyati bilan bog'langan
 
 
 class Reservation(Base):
@@ -74,7 +73,6 @@ class Reservation(Base):
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=False)
     is_active = Column(Boolean, default=True)
-    table = relationship("Table", back_populates="reservations")
 
     user = relationship("User", back_populates="reservations")
     table = relationship("Table", back_populates="reservations")
@@ -89,13 +87,36 @@ class Reservation(Base):
         db.commit()
 
 
+class Floor(Base):
+    __tablename__ = 'floors'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)  # Etajning nomi (1-etaj, 2-etaj, va hokazo)
+
+    modules = relationship("Module", back_populates="floor")  # Modullar bilan bog‘lanish
+
+
 class Table(Base):
     __tablename__ = 'tables'
     id = Column(Integer, primary_key=True, index=True)
     table_number = Column(Integer, unique=True, index=True)
     description = Column(String, nullable=True)
     capacity = Column(Integer)
+    module_id = Column(Integer, ForeignKey('modules.id'))
     status = Column(SqlEnum(TableStatus), default=TableStatus.AVAILABLE)
 
     reservations = relationship("Reservation", back_populates="table")
     orders = relationship("Order", back_populates="table")
+    module = relationship("Module", back_populates="table")
+
+
+
+class Module(Base):
+    __tablename__ = 'modules'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    floor_id = Column(Integer, ForeignKey('floors.id'))
+
+    table = relationship("Table", back_populates="module")
+    floor = relationship("Floor", back_populates="modules")

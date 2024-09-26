@@ -1,8 +1,11 @@
+from __future__ import annotations
 import pytz
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from enum import Enum
+
+from app.models import Module
 
 
 class UserBase(BaseModel):
@@ -132,8 +135,7 @@ class Table(BaseModel):
         orm_mode = True
 
 
-
-
+# ReservationCreate class correction
 class ReservationCreate(BaseModel):
     user_id: int
     table_id: int  # table_number o'rniga table_id
@@ -146,7 +148,7 @@ class ReservationCreate(BaseModel):
 
     def local_create_time(self):
         timezone = pytz.timezone('Asia/Tashkent')
-        return self.create.astimezone(timezone)
+        return self.start_time.astimezone(timezone)
 
 
 
@@ -169,11 +171,12 @@ class ReservationResponse(BaseModel):
         orm_mode = True
 
 
-
+# TableStatus enum
 class TableStatus(str, Enum):
     AVAILABLE = "AVAILABLE"
     RESERVED = "RESERVED"
 
+# Table Pydantic models
 class TableBase(BaseModel):
     table_number: int
     capacity: int
@@ -186,14 +189,67 @@ class TableUpdate(BaseModel):
     capacity: Optional[int] = None
     status: Optional[TableStatus] = None
 
-
 class TableInDB(TableBase):
     id: int
+    module_id: int
 
     class Config:
         orm_mode = True
 
 
+class TableSchema(BaseModel):
+    id: int
+    table_number: int
 
-932470980
-936275060
+    class Config:
+        orm_mode = True
+
+
+# Module Pydantic models
+# FloorBase - Umumiy asosiy schema
+class FloorBase(BaseModel):
+    name: str
+
+
+# FloorCreate - Yangi etaj yaratishda ishlatiladi
+class FloorCreate(FloorBase):
+    pass
+
+
+# Module modeli uchun schema
+class ModuleBase(BaseModel):
+    name: str
+    floor_id: int
+
+
+class ModuleCreate(BaseModel):
+    name: str
+    floor_id: int
+    table_id: Optional[int]  # Allow table_id to be optional for flexibility
+
+    class Config:
+        orm_mode = True
+
+
+class Floor(FloorBase):
+    id: int
+    modules: List[ModuleSchema] = []
+
+    class Config:
+        orm_mode = True
+
+class ModuleSchema(ModuleBase):
+    id: int
+    table_id: Optional[int] = None  # Allow None if table_id is not always required
+
+    class Config:
+        orm_mode = True
+
+class FloorInDB(FloorBase):
+    id: int
+    modules: List[ModuleSchema] = []
+
+    class Config:
+        orm_mode = True
+
+Floor.update_forward_refs()
