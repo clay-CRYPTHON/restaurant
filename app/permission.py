@@ -14,17 +14,35 @@ def get_db():
         db.close()
 
 
+# Foydalanuvchi rolini olish
 def get_current_user(Authorize: AuthJWT = Depends()):
-    pass
-
-
-def is_nazoratchi(Authorize: AuthJWT = Depends()):
     try:
         Authorize.jwt_required()
-        raw_jwt = Authorize.get_raw_jwt()
-        user_role = raw_jwt.get("role")
-
-        if user_role != "NAZORATCHI":
-            raise HTTPException(status_code=403, detail="Access forbidden: Insufficient permissions")
+        user_role = Authorize.get_raw_jwt().get("role")
+        return user_role
     except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid or missing token")
+
+# NAZORATCHI ruxsati
+def is_nazoratchi(Authorize: AuthJWT = Depends()):
+    user_role = get_current_user(Authorize)
+    if user_role != "NAZORATCHI":
+        raise HTTPException(status_code=403, detail="Access forbidden: Insufficient permissions")
+
+# AFISSANT ruxsati
+def is_afissant(Authorize: AuthJWT = Depends()):
+    user_role = get_current_user(Authorize)
+    if user_role != "AFISSANT":
+        raise HTTPException(status_code=403, detail="Access forbidden: Insufficient permissions")
+
+# HODIM ruxsati
+def is_hodim(Authorize: AuthJWT = Depends()):
+    user_role = get_current_user(Authorize)
+    if user_role != "HODIM":
+        raise HTTPException(status_code=403, detail="Access forbidden: Insufficient permissions")
+
+# USER ruxsati
+def is_user(Authorize: AuthJWT = Depends()):
+    user_role = get_current_user(Authorize)
+    if user_role != "USER":
+        raise HTTPException(status_code=403, detail="Access forbidden: Insufficient permissions")

@@ -1,31 +1,31 @@
 """create modules table
 
-Revision ID: 215d36dc3d0e
-Revises: 7e5db20872cd
-Create Date: 2024-09-25 16:33:18.190294
+Revision ID: 4cacfd6742db
+Revises: 4d25377c30e7
+Create Date: 2024-09-28 15:05:45.244102
 
 """
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '215d36dc3d0e'
-down_revision: Union[str, None] = '7e5db20872cd'
+revision: str = '4cacfd6742db'
+down_revision: Union[str, None] = '4d25377c30e7'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-def upgrade():
+def upgrade() -> None:
     op.create_table(
         'modules',
-        sa.Column('id', sa.Integer(), primary_key=True, index=True),
-        sa.Column('name', sa.String(), nullable=False),
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('name', sa.String, nullable=False),
         sa.Column('floor_id', sa.Integer(), sa.ForeignKey('floors.id')),
-        sa.Column('table_id', sa.Integer(), sa.ForeignKey('tables.id'))
     )
 
-def downgrade():
+
+def downgrade() -> None:
     op.drop_table('modules')

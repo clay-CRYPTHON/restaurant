@@ -1,19 +1,19 @@
 """create menu table
 
-Revision ID: 4e5aff9000cc
-Revises: 0728540cc5ba
-Create Date: 2024-09-25 16:32:00.493522
+Revision ID: ba8647548d36
+Revises: 291f5ece2120
+Create Date: 2024-09-28 14:42:08.228376
 
 """
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '4e5aff9000cc'
-down_revision: Union[str, None] = '0728540cc5ba'
+revision: str = 'ba8647548d36'
+down_revision: Union[str, None] = '291f5ece2120'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

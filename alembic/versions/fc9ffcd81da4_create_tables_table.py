@@ -1,24 +1,24 @@
 """create tables table
 
-Revision ID: eb1dd196fdcc
-Revises: 215d36dc3d0e
-Create Date: 2024-09-25 16:34:00.532947
+Revision ID: fc9ffcd81da4
+Revises: 4cacfd6742db
+Create Date: 2024-09-28 15:08:25.628086
 
 """
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'eb1dd196fdcc'
-down_revision: Union[str, None] = '215d36dc3d0e'
+revision: str = 'fc9ffcd81da4'
+down_revision: Union[str, None] = '4cacfd6742db'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-def upgrade():
+def upgrade() -> None:
     op.create_table(
         'tables',
         sa.Column('id', sa.Integer(), primary_key=True, index=True),
@@ -29,5 +29,6 @@ def upgrade():
         sa.Column('status', sa.Enum('AVAILABLE', 'RESERVED', name='tablestatus'), default='AVAILABLE')
     )
 
-def downgrade():
+
+def downgrade() -> None:
     op.drop_table('tables')

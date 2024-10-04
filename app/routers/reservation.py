@@ -10,6 +10,7 @@ from typing import List
 import asyncio
 from datetime import datetime
 import time
+from app.permission import is_nazoratchi, is_user, is_afissant  # Rollar uchun ruxsatlarni import qilish
 
 reservation_router = APIRouter()
 
@@ -37,7 +38,8 @@ def set_table_status_to_reserved(table: Table, db: Session):
     db.commit()
 
 
-@reservation_router.post("/create", response_model=ReservationResponse)
+# Rezervatsiya yaratish - faqat USER va AFISSANT yaratishi mumkin
+@reservation_router.post("/create", response_model=ReservationResponse, dependencies=[Depends(is_user)])
 async def create_reservation(reservation: ReservationCreate, background_tasks: BackgroundTasks,
                              db: Session = Depends(get_db), Authorize: AuthJWT = Depends()):
     try:
@@ -79,12 +81,15 @@ async def create_reservation(reservation: ReservationCreate, background_tasks: B
 
     return db_reservation
 
-@reservation_router.get("/", response_model=List[ReservationResponse])
+
+# Rezervatsiyalarni olish - faqat AFISSANT ko'rishi mumkin
+@reservation_router.get("/", response_model=List[ReservationResponse], dependencies=[Depends(is_afissant)])
 def get_reservations(db: Session = Depends(get_db)):
     return db.query(Reservation).all()
 
 
-@reservation_router.put("/{id}", response_model=ReservationResponse)
+# Rezervatsiyani yangilash - faqat NAZORATCHI yangilashi mumkin
+@reservation_router.put("/{id}", response_model=ReservationResponse, dependencies=[Depends(is_nazoratchi)])
 def update_reservation(id: int, reservation: ReservationUpdate, db: Session = Depends(get_db)):
     db_reservation = db.query(Reservation).filter(Reservation.id == id).first()
     if db_reservation is None:
@@ -96,7 +101,8 @@ def update_reservation(id: int, reservation: ReservationUpdate, db: Session = De
     return db_reservation
 
 
-@reservation_router.delete("/{id}", response_model=ReservationResponse)
+# Rezervatsiyani o'chirish - faqat NAZORATCHI o'chirishi mumkin
+@reservation_router.delete("/{id}", response_model=ReservationResponse, dependencies=[Depends(is_nazoratchi)])
 def delete_reservation(id: int, db: Session = Depends(get_db)):
     db_reservation = db.query(Reservation).filter(Reservation.id == id).first()
     if db_reservation is None:

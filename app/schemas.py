@@ -182,20 +182,30 @@ class TableBase(BaseModel):
     capacity: int
     status: TableStatus = TableStatus.AVAILABLE
 
-class TableCreate(TableBase):
-    pass
+class TableCreate(BaseModel):
+    table_number: int
+    description: Optional[str]
+    capacity: int
+    module_id: int  # Ensure that this is present
+    status: TableStatus = TableStatus.AVAILABLE
+
+    class Config:
+        orm_mode = True
 
 class TableUpdate(BaseModel):
     capacity: Optional[int] = None
     status: Optional[TableStatus] = None
 
-class TableInDB(TableBase):
+class TableInDB(BaseModel):
     id: int
+    table_number: int
+    description: Optional[str]
+    capacity: int
     module_id: int
+    status: TableStatus
 
     class Config:
         orm_mode = True
-
 
 class TableSchema(BaseModel):
     id: int
@@ -225,7 +235,6 @@ class ModuleBase(BaseModel):
 class ModuleCreate(BaseModel):
     name: str
     floor_id: int
-    table_id: Optional[int]  # Allow table_id to be optional for flexibility
 
     class Config:
         orm_mode = True
@@ -240,7 +249,6 @@ class Floor(FloorBase):
 
 class ModuleSchema(ModuleBase):
     id: int
-    table_id: Optional[int] = None  # Allow None if table_id is not always required
 
     class Config:
         orm_mode = True
@@ -252,4 +260,26 @@ class FloorInDB(FloorBase):
     class Config:
         orm_mode = True
 
+class ModuleResponse(BaseModel):
+    id: int
+    name: str
+    floor_id: int
+    tables: List[TableSchema]  # Bu yerda tables ni qaytaramiz
+
+    class Config:
+        orm_mode = True
+
 Floor.update_forward_refs()
+
+
+# Jami daromad uchun schema
+class TotalRevenueResponse(BaseModel):
+    total_revenue: Optional[float] = 0.0
+
+# Stol bo'yicha daromad uchun schema
+class TableRevenueResponse(BaseModel):
+    table_revenue: Optional[float] = 0.0
+
+# Har kunlik, haftalik, oylik, va yillik daromadlar uchun umumiy schema
+class PeriodicRevenueResponse(BaseModel):
+    revenue: Optional[float] = 0.0

@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Enum as SqlEnum
+from sqlalchemy import Enum as SqlEnum, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from datetime import datetime
@@ -37,20 +37,19 @@ class User(Base):
 
 
 class Order(Base):
-    __tablename__ = 'orders'
+    __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    menu_id = Column(Integer, ForeignKey('menu.id'))
-    table_id = Column(Integer, ForeignKey('tables.id'))
-    quantity = Column(Integer)
-    status = Column(String)
-    delivery_time = Column(DateTime, nullable=True)  # Ensure this line is present
+    user_id = Column(Integer, ForeignKey("users.id"))
+    menu_id = Column(Integer, ForeignKey("menu.id"))
+    table_id = Column(Integer, ForeignKey("tables.id"))
+    quantity = Column(Integer, nullable=False)
+    price = Column(Float, nullable=False)  # Bu yerda buyurtmaning narxi saqlanadi
+    status = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = relationship('User', back_populates='orders')
-    menu = relationship('Menu', back_populates='orders')
+    user = relationship("User", back_populates="orders")
+    menu = relationship("Menu", back_populates="orders")
     table = relationship("Table", back_populates="orders")
 
 class Menu(Base):
